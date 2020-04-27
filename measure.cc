@@ -3,6 +3,18 @@
 #include "MagField.h"
 #include "make_VMagField.h"
 
+static void UnorderedMapLock_value(benchmark::State& state) {
+
+  auto mf = make_vmagfield();
+
+  Point p;
+  for(auto _ : state) {
+    mf->valueUnorderedMapLock(p);
+  }
+}
+
+BENCHMARK(UnorderedMapLock_value);
+
 static void UnorderedMap_value(benchmark::State& state) {
 
   auto mf = make_vmagfield();

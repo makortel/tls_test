@@ -1,5 +1,6 @@
 #include "make_VMagField.h"
 
+#include <mutex>
 #include <thread>
 #include <unordered_map>
 
@@ -32,6 +33,7 @@ namespace {
   thread_local int presentID{0};
   thread_local Volume const* presentVolume{nullptr};
 
+  std::mutex mapCacheMutex;
   std::unordered_map<std::thread::id, Volume const*> mapCache;
 }
 
@@ -43,6 +45,7 @@ public:
   double value(Point const& ) const override;
 
   double valueUnorderedMap(Point const& ) const override;
+  double valueUnorderedMapLock(Point const& ) const override;
     
   double value(Point const&, Cache& ) const override;
   
@@ -72,6 +75,24 @@ double VMagField::value(Point const& iPoint) const {
 }
 
 double VMagField::valueUnorderedMap(Point const& iPoint) const {
+  auto found = mapCache.find(std::this_thread::get_id());
+  Volume const* curVolume = nullptr;
+  if(found != mapCache.end()) {
+    curVolume = found->second;
+    if(not curVolume->contains(iPoint)) {
+      curVolume = findVolume(iPoint);
+      mapCache[std::this_thread::get_id()] = curVolume;
+    }
+  }
+  else {
+    curVolume = findVolume(iPoint);
+    mapCache[std::this_thread::get_id()] = curVolume;
+  }
+  return curVolume->value();
+}
+
+double VMagField::valueUnorderedMapLock(Point const& iPoint) const {
+  std::unique_lock g(mapCacheMutex);
   auto found = mapCache.find(std::this_thread::get_id());
   Volume const* curVolume = nullptr;
   if(found != mapCache.end()) {

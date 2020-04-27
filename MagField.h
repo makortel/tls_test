@@ -18,6 +18,7 @@ class MagField {
   virtual double value(Point const& ) const = 0;
 
   virtual double valueUnorderedMap(Point const& ) const = 0;
+  virtual double valueUnorderedMapLock(Point const& ) const = 0;
 
   virtual double value(Point const&, Cache& ) const = 0;
 
