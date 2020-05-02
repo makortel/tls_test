@@ -48,8 +48,10 @@ public:
   double valueUnorderedMapLock(Point const& ) const override;
     
   double value(Point const&, Cache& ) const override;
+  double valueBranch(Point const&, Cache& ) const override;
   
   Cache nominalCache() const override;
+  Cache nominalCacheBranch() const override;
   
   int id_;
   
@@ -117,6 +119,17 @@ double VMagField::value(Point const& iPoint, Cache& iCache) const {
   return static_cast<Volume const*>(iCache.value_)->value();
 }
 
+double VMagField::valueBranch(Point const& iPoint, Cache& iCache) const {
+  auto lastVolume = static_cast<Volume const*>(iCache.value_);
+  if(lastVolume and lastVolume->contains(iPoint)) {
+    return lastVolume->value();
+  }
+
+  auto result = findVolume(iPoint);
+  iCache.value_ = result;
+  return result->value();
+}
+
 Volume const* VMagField::findVolume(Point const& iPoint) const {
   if(left_.contains(iPoint)) {
     return &left_;
@@ -128,6 +141,9 @@ Volume const* VMagField::findVolume(Point const& iPoint) const {
 
 Cache VMagField::nominalCache() const {
   return Cache(&left_);
+};
+Cache VMagField::nominalCacheBranch() const {
+  return Cache(nullptr);
 };
 
 std::unique_ptr<MagField> make_vmagfield() {

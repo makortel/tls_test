@@ -39,6 +39,19 @@ static void TLS_value(benchmark::State& state) {
 
 BENCHMARK(TLS_value);
 
+static void CacheBranch_value(benchmark::State& state) {
+
+  auto mf = make_vmagfield();
+
+  Cache c = mf->nominalCacheBranch();
+  Point p;
+  for(auto _ : state) {
+    mf->valueBranch(p,c);
+  }
+}
+
+BENCHMARK(CacheBranch_value);
+
 
 static void Cache_value(benchmark::State& state) {
 
